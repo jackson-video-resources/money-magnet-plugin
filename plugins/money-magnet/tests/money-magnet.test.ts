@@ -48,6 +48,7 @@ test('pane shows the steps, and the button starts the next step', withKey, async
     const ui = await $.ui.mount({ ...PANE, surface })
     expect(await ui.find({ type: 'Text', text: '3  Your routes' })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: '2 of 7' })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /Routes give each score its own/ })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: '\u2588'.repeat(7) })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: 'Why you three-putt' })).toBeDefined()
     await ui.press({ key: 'next' })

@@ -16,6 +16,16 @@ const NAMES = [
   "Live",
   "Video links",
 ];
+// Shown under the current step in the panel, for the member (plain words, ten-year-old readable).
+const WHY = {
+  1: "Your scorecard can only send people to an offer it knows about. This is where it learns what you sell and who buys it.",
+  2: "The video makes people ask \u201cwhere do I stand?\u201d The scorecard answers that, so the video comes first.",
+  3: "Someone just starting and someone ready to buy need different next steps. Routes give each score its own.",
+  4: "Every answer moves the score. Good questions sort people by how close they are to buying from you.",
+  5: "People decide in seconds whether it looks like you. Your colours, font and logo make it feel like yours.",
+  6: "Until it's on your own site with your email tool connected, nobody can take it and you get no leads.",
+  7: "Every link and QR code is tracked, so you can see which video and which moment sends you leads.",
+};
 const WHAT = {
   1: "what they sell and its price, who it is for, what someone has to have done or know just before they would buy, their channel, views a video",
   2: "pick the video this scorecard sits under, from suggest_videos or their own idea",
@@ -234,9 +244,9 @@ export function register(on, options = {}) {
     rows.push(
       Box({
         flexDirection: "column",
-        children: prog.steps.map((s) => {
+        children: prog.steps.flatMap((s) => {
           const now = s.n === prog.step;
-          return Box({
+          const row = Box({
             key: "s" + s.n,
             flexDirection: "row",
             children: [
@@ -254,6 +264,15 @@ export function register(on, options = {}) {
               }),
             ],
           });
+          if (!now) return [row];
+          return [
+            row,
+            Box({
+              key: "why",
+              paddingLeft: 5,
+              children: [Text({ dimColor: true, italic: true, wrap: "wrap", children: [WHY[s.n]] })],
+            }),
+          ];
         }),
       }),
     );
