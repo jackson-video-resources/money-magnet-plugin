@@ -14,13 +14,13 @@ const NAMES = [
   "Video links",
 ];
 const WHAT = {
-  1: "what you sell, who it is for, and what someone needs just before they buy",
-  2: "the video that leads into your scorecard",
-  3: "where each result sends people, lowest score first",
-  4: "the questions and the results",
-  5: "your page: the words, colours, font and logo",
-  6: "putting it live on your own site and checking it",
-  7: "tracked links and QR codes for your next video",
+  1: "what they sell and its price, who it is for, what someone has to have done or know just before they would buy, their channel, views a video",
+  2: "pick the video this scorecard sits under, from suggest_videos or their own idea",
+  3: "routes are their next steps to sell, NOT parts of the quiz: 2 to 4 places to send people, lowest score first, e.g. a free video or community, a low-price offer, then their main offer or a call, each with a price and an https link; offer sensible line-ups from what they sell as options",
+  4: "draft_scorecard writes 8 questions and one result per route; show it short and let them change anything with update_scorecard",
+  5: "the page: brand name, colours, font and logo via update_scorecard, until problems is empty",
+  6: "get_build_prompt, follow it in this folder to put it live on their Vercel, then check_live",
+  7: "save_video once their video is cut: description, pinned comment, tracked links, QR codes",
 };
 
 // Keys that should never sit in a project file (Kit, Mailchimp, Resend, HubSpot, Stripe, OpenAI and the like).
@@ -47,9 +47,12 @@ async function refresh($) {
   } catch {}
   $.ui.invalidate("ui.render");
 }
-// Starts a turn as if the member typed it. Not awaited: it resolves only once the turn starts.
+// Starts a turn as if the member typed it. A command hook can't start a turn while it's running, so the
+// submit waits for the next tick, after the command has finished.
 function ask($, text) {
-  $.prompt.submit({ text, asUser: true }).catch(() => {});
+  $.clock.after(0, () => {
+    $.prompt.submit({ text, asUser: true }).catch((err) => $.ui.log("Money Magnet couldn't start that step: " + String(err)));
+  });
 }
 function nextStep() {
   if (!prog) return "Let’s start my Money Magnet.";
@@ -147,7 +150,7 @@ export function register(on, options = {}) {
           .map((s) => s.n)
           .join(", ") || "none"
       : "unknown";
-    const line = `[Money Magnet workshop] ${prog ? `The member is on ${where()}${prog.step <= 7 ? ` (${WHAT[prog.step]})` : ""}. Steps done: ${done}.` : "Call workshop_progress to see where the member is."} Use the money-magnet tools and save each answer as soon as they give it. For every decision, use AskUserQuestion with 2 to 4 concrete options built from what they have told you, your recommendation first. One question at a time, plain words, short messages.`;
+    const line = `[Money Magnet workshop] ${prog ? `The member is on ${where()}${prog.step <= 7 ? ` (${WHAT[prog.step]})` : ""}. Steps done: ${done}.` : "Call workshop_progress to see where the member is."} Use the money-magnet tools and save each answer as soon as they give it. Whenever you would ask them to choose (which idea, which order, which colours, what to do next), call the AskUserQuestion tool with 2 to 4 concrete options built from what they have told you, your recommendation first, instead of asking in text, including the choice that ends a step. Only ask in text for facts only they know. One question at a time, plain words, short messages, no em dashes.`;
     return next({ ...e, context: [...(e.context ?? []), line] });
   });
 

@@ -1,4 +1,4 @@
-import { expect, test } from 'claude-code/testing'
+import { expect, mock, test } from 'claude-code/testing'
 
 const KEY = '94fe81e25925b71b56c5080f2e3369e0'
 const PROG = {
@@ -22,6 +22,7 @@ const PANE = {
 } as const
 
 function stubs(on, seen) {
+  seen.clock = mock.clock(on)
   on('http.fetch', ($, e) => {
     seen.urls.push(e.url)
     return { value: { ok: true, status: 200, headers: {}, text: JSON.stringify(PROG) } }
@@ -34,6 +35,7 @@ function stubs(on, seen) {
     return { text: e.text }
   })
   on('tool.call', () => ({ result: 'ran' }))
+  on('ui.log', () => ({ value: undefined }))
   on('ui.render', () => ({ type: 'Text', props: {}, children: ['drawn by Claude Code'] }))
 }
 
@@ -47,6 +49,7 @@ test('pane shows the steps, and the button starts the next step', withKey, async
     expect(await ui.find({ type: 'Text', text: /→ 3\. Your routes/ })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: /Video: Why you three-putt/ })).toBeDefined()
     await ui.press({ key: 'next' })
+    await seen.clock.settle()
     await ui.unmount()
   }
   expect(seen.prompts.filter((p) => /step 3 of my Money Magnet: Your routes/.test(p.text)).length).toBe(2)
