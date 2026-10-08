@@ -1,0 +1,12 @@
+{
+  "name": "money-magnets",
+  "description": "Lewis Jackson's Money Magnets tools for Claude Code",
+  "owner": { "name": "Lewis Jackson", "url": "https://lewiswjackson.com" },
+  "plugins": [
+    {
+      "name": "money-magnet",
+      "source": "./plugins/money-magnet",
+      "description": "Build your scorecard Money Magnet in chat, with your progress on screen and every choice as a card"
+    }
+  ]
+}

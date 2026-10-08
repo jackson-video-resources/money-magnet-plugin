@@ -1,0 +1,23 @@
+{
+  "name": "money-magnet",
+  "version": "1.0.0",
+  "description": "Build your scorecard Money Magnet in chat, with your progress on screen and every choice as a card",
+  "author": {
+    "name": "Lewis Jackson"
+  },
+  "homepage": "https://lewiswjackson.com/workshop",
+  "userConfig": {
+    "workshop_key": {
+      "type": "string",
+      "title": "Workshop key",
+      "description": "The key on your workshop page (lewiswjackson.com/workshop/app), under Build in Claude Code",
+      "default": ""
+    }
+  },
+  "mcpServers": {
+    "money-magnet": {
+      "type": "http",
+      "url": "https://lewiswjackson.com/mcp/scorecard/${user_config.workshop_key}"
+    }
+  }
+}
