@@ -46,8 +46,10 @@ test('pane shows the steps, and the button starts the next step', withKey, async
   expect(seen.urls[0]).toBe(`https://lewiswjackson.com/scorecards/edit/${KEY}/progress`)
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
-    expect(await ui.find({ type: 'Text', text: /→ 3\. Your routes/ })).toBeDefined()
-    expect(await ui.find({ type: 'Text', text: /Video: Why you three-putt/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: '3  Your routes' })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: '2 of 7' })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: '\u2588'.repeat(7) })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: 'Why you three-putt' })).toBeDefined()
     await ui.press({ key: 'next' })
     await seen.clock.settle()
     await ui.unmount()

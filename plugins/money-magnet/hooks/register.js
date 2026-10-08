@@ -4,6 +4,9 @@
 // Claude where they are. The connector (the plugin's MCP server) does the saving; this file only reads.
 const BASE = "https://lewiswjackson.com";
 const PANE = "money-magnet";
+// Money Magnets orange (lewiswjackson.com v2 --v2-o), the one accent, readable on light and dark terminals.
+const ORANGE = "#c2541d";
+const BAR = 24;
 const NAMES = [
   "Your business",
   "Your video",
@@ -58,6 +61,13 @@ function nextStep() {
   if (!prog) return "Let’s start my Money Magnet.";
   if (prog.step > 7) return "My Money Magnet is set up. What should I do next?";
   return `Let’s do step ${prog.step} of my Money Magnet: ${NAMES[prog.step - 1]}.`;
+}
+function doneCount() {
+  return prog ? prog.steps.filter((s) => s.done).length : 0;
+}
+function barCells(width) {
+  const full = Math.round((doneCount() / 7) * width);
+  return ["\u2588".repeat(full), "\u2591".repeat(width - full)];
 }
 function where() {
   if (!prog) return "";
@@ -198,51 +208,79 @@ export function register(on, options = {}) {
       rows.push(Text({ children: [note || "Loading your Money Magnet..."] }));
       return Box({ flexDirection: "column", children: rows });
     }
+    const [full, empty] = barCells(BAR);
     rows.push(
       Box({
-        flexDirection: "row",
-        gap: 1,
+        flexDirection: "column",
         children: [
-          Text({ bold: true, children: ["Your Money Magnet"] }),
-          Text({ dimColor: true, children: [where()] }),
+          Text({ bold: true, color: ORANGE, children: ["MONEY MAGNET"] }),
+          Box({
+            flexDirection: "row",
+            gap: 1,
+            children: [
+              Box({
+                flexDirection: "row",
+                children: [
+                  Text({ color: ORANGE, children: [full] }),
+                  Text({ dimColor: true, children: [empty] }),
+                ],
+              }),
+              Text({ bold: true, children: [`${doneCount()} of 7`] }),
+            ],
+          }),
         ],
       }),
     );
     rows.push(
       Box({
         flexDirection: "column",
-        children: prog.steps.map((s) =>
-          Text({
+        children: prog.steps.map((s) => {
+          const now = s.n === prog.step;
+          return Box({
             key: "s" + s.n,
-            bold: s.n === prog.step,
-            color: s.done ? "green" : undefined,
-            dimColor: !s.done && s.n !== prog.step,
+            flexDirection: "row",
             children: [
-              `${s.done ? "✓" : s.n === prog.step ? "→" : " "} ${s.n}. ${s.name}`,
+              Text({
+                color: s.done || now ? ORANGE : undefined,
+                dimColor: !s.done && !now,
+                bold: now,
+                children: [s.done ? "✓ " : now ? "▸ " : "  "],
+              }),
+              Text({
+                bold: now,
+                color: now ? ORANGE : undefined,
+                dimColor: !s.done && !now,
+                children: [`${s.n}  ${s.name}`],
+              }),
             ],
-          }),
-        ),
+          });
+        }),
       }),
     );
     const facts = [];
     if (prog.business?.sells)
-      facts.push(
-        `Sells: ${prog.business.sells}${prog.business.price ? ` (${prog.business.price})` : ""}`,
-      );
+      facts.push([
+        "Sells",
+        `${prog.business.sells}${prog.business.price && !prog.business.sells.includes(prog.business.price) ? ` (${prog.business.price})` : ""}`,
+      ]);
     if (prog.video)
-      facts.push(
-        `Video: ${prog.video.video}`,
-        `Scorecard: ${prog.video.scorecard}`,
-      );
+      facts.push(["Video", prog.video.video], ["Scorecard", prog.video.scorecard]);
     if (prog.routes?.length)
-      facts.push(`Routes: ${prog.routes.map((r) => r.name).join(" → ")}`);
-    if (prog.sums?.line) facts.push(`One video, rough sums: ${prog.sums.line}`);
+      facts.push(["Routes", prog.routes.map((r) => r.name).join(" → ")]);
+    if (prog.sums?.line) facts.push(["One video", prog.sums.line, true]);
     if (facts.length)
       rows.push(
         Box({
           flexDirection: "column",
-          children: facts.map((f, i) =>
-            Text({ key: "f" + i, wrap: "wrap", children: [f] }),
+          children: facts.map(([label, value, money], i) =>
+            Box({
+              key: "f" + i,
+              flexDirection: "row",
+              children: [
+                Box({ width: 11, flexShrink: 0, children: [Text({ dimColor: true, children: [label] })] }),
+                Text({ wrap: "wrap", bold: Boolean(money), color: money ? ORANGE : undefined, children: [value] }),
+              ],
+            }),
           ),
         }),
       );
@@ -291,9 +329,21 @@ export function register(on, options = {}) {
     const theirs = await next(e);
     if (!key || !prog) return theirs;
     const { Box, Text } = $.ui.resolve(e);
-    const mine = Text({
-      dimColor: true,
-      children: [`Money Magnet · ${where()} · /magnet-next to carry on`],
+    const [full, empty] = barCells(7);
+    const mine = Box({
+      flexDirection: "row",
+      gap: 1,
+      children: [
+        Text({ bold: true, color: ORANGE, children: ["Money Magnet"] }),
+        Box({
+          flexDirection: "row",
+          children: [
+            Text({ color: ORANGE, children: [full] }),
+            Text({ dimColor: true, children: [empty] }),
+          ],
+        }),
+        Text({ dimColor: true, children: [`${where()} · /magnet-next to carry on`] }),
+      ],
     });
     return theirs
       ? Box({ flexDirection: "column", children: [mine, theirs] })
@@ -310,7 +360,7 @@ export function register(on, options = {}) {
       children: [
         Text({
           bold: true,
-          color: "yellow",
+          color: ORANGE,
           children: [`Money Magnet · ${where()}`],
         }),
         theirs,
